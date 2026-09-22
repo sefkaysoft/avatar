@@ -1,0 +1,552 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Gürsu BİLSEM - İklim Elçileri İsim Belirleme Anketi</title>
+  
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <!-- WordCloud2.js CDN -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/wordcloud2.js/1.2.2/wordcloud2.min.js"></script>
+  <!-- Canvas Confetti CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['"Plus Jakarta Sans"', 'sans-serif'],
+            heading: ['"Outfit"', 'sans-serif'],
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    /* Arka plan parçacık canvası */
+    #natureCanvas {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      pointer-events: none;
+      z-index: 0;
+    }
+  </style>
+</head>
+<body class="bg-gradient-to-b from-sky-50/70 via-emerald-50/40 to-slate-100 text-slate-800 font-sans antialiased min-h-screen flex flex-col justify-between relative selection:bg-emerald-500 selection:text-white">
+
+  <!-- Canlı Yaprak, Damla ve Çimen Simülasyonu -->
+  <canvas id="natureCanvas"></canvas>
+
+  <!-- Header Banner -->
+  <header class="bg-gradient-to-r from-emerald-800 via-teal-800 to-sky-800 text-white shadow-lg sticky top-0 z-50 backdrop-blur-md bg-opacity-95">
+    <div class="max-w-7xl mx-auto px-4 py-4 flex flex-col sm:flex-row items-center justify-between gap-3">
+      <div class="flex items-center space-x-3">
+        <div class="w-11 h-11 rounded-2xl bg-white/15 backdrop-blur-md flex items-center justify-center p-1 border border-white/20 shadow-inner overflow-hidden">
+          <img src="logo.png" alt="Gürsu BİLSEM Logosu" class="w-full h-full object-contain">
+        </div>
+        <div>
+          <h1 class="text-xl font-heading font-bold tracking-tight">Gürsu Bilim ve Sanat Merkezi</h1>
+          <p class="text-xs text-emerald-200 font-medium flex items-center gap-1.5">
+            <span>💧 European Blue School (Avrupa Mavi Okulu)</span>
+            <span>•</span>
+            <span>🌱 TODZEM İklim ve Doğa Hareketi</span>
+          </p>
+        </div>
+      </div>
+      <div class="flex items-center gap-2">
+        <span class="inline-flex items-center px-3.5 py-1 rounded-full text-xs font-semibold bg-sky-400/20 text-sky-200 border border-sky-300/30 backdrop-blur-sm">
+          🌊 Su Okuryazarlığı & eTwinning
+        </span>
+      </div>
+    </div>
+  </header>
+
+  <!-- Ana İçerik -->
+  <main class="max-w-7xl mx-auto px-4 py-10 space-y-12 relative z-10">
+    
+    <!-- Kurumsal Hikaye ve Misyon Kartı -->
+    <section class="bg-white/85 backdrop-blur-md rounded-3xl p-6 sm:p-10 shadow-xl border border-emerald-100/80 relative overflow-hidden">
+      <div class="absolute -top-12 -right-12 w-48 h-48 bg-gradient-to-br from-emerald-200/40 to-sky-200/30 rounded-full blur-2xl pointer-events-none"></div>
+      
+      <div class="max-w-4xl mx-auto space-y-5 text-center sm:text-left">
+        <div class="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full text-xs font-bold bg-emerald-100 text-emerald-800 border border-emerald-300">
+          <span>🌍 Doğa, Bilim ve Gelecek El Ele</span>
+        </div>
+        
+        <h2 class="text-2xl sm:text-3xl lg:text-4xl font-heading font-extrabold text-slate-900 leading-tight">
+          Gürsu BİLSEM: Geleceğin Çevre ve Su Muhafızları Yetişiyor!
+        </h2>
+        
+        <div class="text-slate-600 text-sm sm:text-base leading-relaxed space-y-3">
+          <p>
+            Gürsu Bilim ve Sanat Merkezi olarak, iklim krizine duyarsız kalmayan, sürdürülebilir bir dünya vizyonunu benimseyen ve doğanın döngülerini teknolojiyle harmanlayan nesiller yetiştiriyoruz. Merkezimizde hayata geçirdiğimiz ve temelini <strong>su okuryazarlığı</strong>, kuraklıkla mücadele ve havza koruma bilincinin oluşturduğu <strong>TODZEM</strong> projemizle birlikte, çevre ve iklim odağında çok sayıda ulusal ve uluslararası <strong>eTwinning</strong> projesini öğrencilerimizle buluşturduk.
+          </p>
+          <p>
+            Mavi gezegenimizin en kıymetli hazinesi olan su kaynaklarına dair yürüttüğümüz bu köklü ekolojik çalışmaların ve bilimsel duyarlılığın bir meyvesi olarak kurumumuz, Avrupa Komisyonu tarafından tescillenen prestijli <strong>"European Blue School" (Avrupa Mavi Okulu)</strong> unvanı ve etiketine layık görülmüştür.
+          </p>
+          <p class="font-medium text-emerald-900">
+            Şimdi, bu büyük vizyonu atölyelerde, yarışmalarda, ekolojik kamplarda ve uluslararası platformlarda temsil edecek iki süper kahraman maskotumuza isim arıyoruz. Her cihazdan en fazla 2 defa oy kullanılabilmektedir!
+          </p>
+        </div>
+      </div>
+    </section>
+
+    <!-- Avatarlar ve Öneri Giriş Kartları -->
+    <section class="grid grid-cols-1 md:grid-cols-2 gap-8 items-start">
+      
+      <!-- 1. Avatar (Kız Karakter) -->
+      <div class="bg-white/90 backdrop-blur-md rounded-3xl p-6 shadow-lg border border-emerald-100 hover:shadow-2xl transition-all duration-300 flex flex-col items-center">
+        <div class="relative w-full max-w-sm h-96 rounded-2xl overflow-hidden shadow-inner bg-gradient-to-b from-emerald-100/40 to-teal-50/50 mb-5 border border-emerald-100 flex items-center justify-center p-2">
+          <img src="avatar1.jpeg" alt="Gürsu BİLSEM Kız İklim Elçisi" class="w-full h-full object-contain">
+          <span class="absolute top-3 left-3 bg-emerald-600 text-white text-xs font-bold px-3 py-1 rounded-full shadow-md flex items-center gap-1">
+            🌱 Avatar 1
+          </span>
+        </div>
+        <h3 class="font-heading font-bold text-xl text-slate-800 mb-1">Kız İklim Elçisi</h3>
+        <p class="text-xs text-slate-500 mb-4 text-center">Doğa koruyucusu, su damlası ve yaprak zırhıyla temiz geleceği savunuyor.</p>
+        
+        <div class="w-full space-y-2">
+          <label for="name1" class="text-xs font-bold text-slate-700 uppercase tracking-wide">İsim Öneriniz</label>
+          <input type="text" id="name1" placeholder="Örn: Damla, EkoMira, Polen..." 
+                 class="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-200 outline-none transition text-sm bg-white disabled:bg-slate-100 disabled:text-slate-400">
+        </div>
+      </div>
+
+      <!-- 2. Avatar (Erkek Karakter) -->
+      <div class="bg-white/90 backdrop-blur-md rounded-3xl p-6 shadow-lg border border-sky-100 hover:shadow-2xl transition-all duration-300 flex flex-col items-center">
+        <div class="relative w-full max-w-sm h-96 rounded-2xl overflow-hidden shadow-inner bg-gradient-to-b from-sky-100/40 to-cyan-50/50 mb-5 border border-sky-100 flex items-center justify-center p-2">
+          <img src="avatar2.jpeg" alt="Gürsu BİLSEM Erkek İklim Elçisi" class="w-full h-full object-contain">
+          <span class="absolute top-3 left-3 bg-sky-600 text-white text-xs font-bold px-3 py-1 rounded-full shadow-md flex items-center gap-1">
+            🌊 Avatar 2
+          </span>
+        </div>
+        <h3 class="font-heading font-bold text-xl text-slate-800 mb-1">Erkek İklim Elçisi</h3>
+        <p class="text-xs text-slate-500 mb-4 text-center">Rüzgar ve okyanus dalgalarının enerjisiyle su kaynaklarını koruyor.</p>
+        
+        <div class="w-full space-y-2">
+          <label for="name2" class="text-xs font-bold text-slate-700 uppercase tracking-wide">İsim Öneriniz</label>
+          <input type="text" id="name2" placeholder="Örn: Çınar, Rüzgar, EkoCan..." 
+                 class="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:border-sky-500 focus:ring-2 focus:ring-sky-200 outline-none transition text-sm bg-white disabled:bg-slate-100 disabled:text-slate-400">
+        </div>
+      </div>
+    </section>
+
+    <!-- Gönder Butonu & Durum Mesajı -->
+    <div class="text-center space-y-3">
+      <button id="submitVote" class="px-10 py-4 bg-gradient-to-r from-emerald-600 via-teal-600 to-sky-600 hover:opacity-95 text-white font-heading font-bold rounded-2xl shadow-xl shadow-teal-600/30 active:scale-95 transition-all text-base disabled:opacity-50 disabled:cursor-not-allowed">
+        Önerileri Kaydet ve Oyla 🚀
+      </button>
+      <p id="feedbackMsg" class="text-xs font-medium text-slate-600 min-h-[1.5rem]"></p>
+    </div>
+
+    <!-- Yan Yana Sonuç ve Kelime Bulutları Paneli -->
+    <section class="space-y-6 pt-6 border-t border-slate-200/80">
+      <div class="flex flex-col sm:flex-row items-center justify-between gap-2">
+        <div>
+          <h3 class="font-heading font-bold text-2xl text-slate-900">Canlı Sonuçlar & Kelime Bulutları</h3>
+          <p class="text-xs text-slate-500">Google E-Tablolar üzerinden oylar toplanır; bulut ve ilk 10 listesi ortak beslenir.</p>
+        </div>
+        <span id="syncStatus" class="text-xs text-slate-500 bg-white/90 px-3.5 py-1.5 rounded-full border shadow-sm backdrop-blur-sm">Bağlantı kuruluyor...</span>
+      </div>
+
+      <!-- İki Kolonlu Yan Yana Düzen (Kız vs Erkek) -->
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        
+        <!-- SOL: Kız Avatar Alanı -->
+        <div class="bg-white/95 backdrop-blur-md rounded-3xl p-6 shadow-md border border-emerald-100 space-y-5">
+          <div class="flex items-center justify-between border-b pb-3 border-emerald-50">
+            <h4 class="font-heading font-bold text-lg text-emerald-800 flex items-center gap-2">
+              <span class="w-3 h-3 rounded-full bg-emerald-500"></span> Kız Avatar İsim Havuzu
+            </h4>
+            <span class="text-xs bg-emerald-50 text-emerald-700 font-bold px-2.5 py-1 rounded-md">Top 10 & Kelime Bulutu</span>
+          </div>
+
+          <!-- Bulut -->
+          <div class="h-64 w-full bg-emerald-50/20 rounded-2xl border border-emerald-50 relative overflow-hidden flex items-center justify-center p-2">
+            <canvas id="cloudCanvas1" class="w-full h-full"></canvas>
+            <div id="cloudEmpty1" class="hidden absolute text-slate-400 text-xs">Henüz öneri kaydedilmedi.</div>
+          </div>
+
+          <!-- Top 10 -->
+          <div>
+            <span class="text-[11px] font-bold text-slate-400 uppercase tracking-wider block mb-2">Zirvedeki 10 İsim</span>
+            <ul id="topList1" class="space-y-2 text-xs"></ul>
+          </div>
+
+          <!-- Tüm İsimler -->
+          <div>
+            <span class="text-[11px] font-bold text-slate-400 uppercase tracking-wider block mb-2">Tüm Öneriler Havuzu</span>
+            <div id="allTags1" class="flex flex-wrap gap-1.5 max-h-28 overflow-y-auto pr-1"></div>
+          </div>
+        </div>
+
+        <!-- SAĞ: Erkek Avatar Alanı -->
+        <div class="bg-white/95 backdrop-blur-md rounded-3xl p-6 shadow-md border border-sky-100 space-y-5">
+          <div class="flex items-center justify-between border-b pb-3 border-sky-50">
+            <h4 class="font-heading font-bold text-lg text-sky-800 flex items-center gap-2">
+              <span class="w-3 h-3 rounded-full bg-sky-500"></span> Erkek Avatar İsim Havuzu
+            </h4>
+            <span class="text-xs bg-sky-50 text-sky-700 font-bold px-2.5 py-1 rounded-md">Top 10 & Kelime Bulutu</span>
+          </div>
+
+          <!-- Bulut -->
+          <div class="h-64 w-full bg-sky-50/20 rounded-2xl border border-sky-50 relative overflow-hidden flex items-center justify-center p-2">
+            <canvas id="cloudCanvas2" class="w-full h-full"></canvas>
+            <div id="cloudEmpty2" class="hidden absolute text-slate-400 text-xs">Henüz öneri kaydedilmedi.</div>
+          </div>
+
+          <!-- Top 10 -->
+          <div>
+            <span class="text-[11px] font-bold text-slate-400 uppercase tracking-wider block mb-2">Zirvedeki 10 İsim</span>
+            <ul id="topList2" class="space-y-2 text-xs"></ul>
+          </div>
+
+          <!-- Tüm İsimler -->
+          <div>
+            <span class="text-[11px] font-bold text-slate-400 uppercase tracking-wider block mb-2">Tüm Öneriler Havuzu</span>
+            <div id="allTags2" class="flex flex-wrap gap-1.5 max-h-28 overflow-y-auto pr-1"></div>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+  </main>
+
+  <!-- Footer -->
+  <footer class="bg-white/90 backdrop-blur-md border-t border-slate-200 mt-12 py-6 text-center text-xs text-slate-500 relative z-10">
+    <p>© 2026 Gürsu Bilim ve Sanat Merkezi • Ekoloji, İklim ve Su Okuryazarlığı Koordinatörlüğü</p>
+  </footer>
+
+  <!-- 1. DOĞA SİMÜLASYONU: Yapraklar, Su Damlaları ve Rüzgarlı Çimenler -->
+  <script>
+    (function initNatureCanvas() {
+      const canvas = document.getElementById('natureCanvas');
+      const ctx = canvas.getContext('2d');
+      let width, height;
+
+      function resize() {
+        width = canvas.width = window.innerWidth;
+        height = canvas.height = window.innerHeight;
+      }
+      window.addEventListener('resize', resize);
+      resize();
+
+      // Su Damlası Nesneleri
+      const drops = Array.from({ length: 18 }, () => ({
+        x: Math.random() * width,
+        y: Math.random() * height,
+        r: Math.random() * 2.5 + 1.5,
+        speed: Math.random() * 0.8 + 0.4,
+        alpha: Math.random() * 0.4 + 0.2
+      }));
+
+      // Rüzgarda Uçuşan Yaprak Nesneleri
+      const leaves = Array.from({ length: 14 }, () => ({
+        x: Math.random() * width,
+        y: Math.random() * height,
+        size: Math.random() * 9 + 7,
+        angle: Math.random() * Math.PI * 2,
+        speedY: Math.random() * 0.7 + 0.3,
+        speedX: Math.random() * 0.6 - 0.2,
+        rotSpeed: (Math.random() - 0.5) * 0.03,
+        alpha: Math.random() * 0.45 + 0.25,
+        color: Math.random() > 0.4 ? '#22c55e' : '#10b981'
+      }));
+
+      let grassTick = 0;
+
+      function drawGrass() {
+        const bladeWidth = 14;
+        const totalBlades = Math.ceil(width / bladeWidth) + 1;
+        grassTick += 0.02;
+
+        for (let i = 0; i < totalBlades; i++) {
+          const x = i * bladeWidth;
+          const bladeHeight = 35 + Math.sin(i * 0.6) * 15;
+          const sway = Math.sin(grassTick + i * 0.25) * 12;
+
+          ctx.beginPath();
+          ctx.moveTo(x, height);
+          ctx.quadraticCurveTo(x + sway * 0.4, height - bladeHeight * 0.5, x + sway, height - bladeHeight);
+          ctx.quadraticCurveTo(x + bladeWidth * 0.5, height - bladeHeight * 0.4, x + bladeWidth, height);
+          ctx.fillStyle = i % 2 === 0 ? 'rgba(34, 197, 94, 0.22)' : 'rgba(16, 185, 129, 0.18)';
+          ctx.fill();
+        }
+      }
+
+      function animate() {
+        ctx.clearRect(0, 0, width, height);
+
+        // Damlaları çiz ve hareket ettir
+        drops.forEach(d => {
+          d.y += d.speed;
+          if (d.y > height) {
+            d.y = -10;
+            d.x = Math.random() * width;
+          }
+          ctx.beginPath();
+          ctx.arc(d.x, d.y, d.r, 0, Math.PI * 2);
+          ctx.fillStyle = `rgba(14, 165, 233, ${d.alpha})`;
+          ctx.fill();
+        });
+
+        // Yaprakları çiz ve döndür
+        leaves.forEach(l => {
+          l.y += l.speedY;
+          l.x += Math.sin(l.angle) * 0.8 + l.speedX;
+          l.angle += l.rotSpeed;
+
+          if (l.y > height + 20) {
+            l.y = -20;
+            l.x = Math.random() * width;
+          }
+
+          ctx.save();
+          ctx.translate(l.x, l.y);
+          ctx.rotate(l.angle);
+          ctx.beginPath();
+          ctx.ellipse(0, 0, l.size, l.size * 0.45, 0, 0, Math.PI * 2);
+          ctx.fillStyle = l.color;
+          ctx.globalAlpha = l.alpha;
+          ctx.fill();
+          ctx.restore();
+        });
+
+        // Alttaki çimenleri çiz
+        drawGrass();
+
+        requestAnimationFrame(animate);
+      }
+      animate();
+    })();
+  </script>
+
+  <!-- 2. VERİ & OYLAMA SCRIPTİ (Google Apps Script Entegre & 2 Oy Sınırı) -->
+  <script>
+    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwqW3jDOxXoTe4jmzOorW4oO1Ga4SUOOsnQ76-1lxSnmMHNbzzDxWNy3PmaSStx9t3L/exec";
+
+    let store = {
+      avatar1: {},
+      avatar2: {}
+    };
+
+    function capitalize(str) {
+      if (!str) return '';
+      return str.trim().split(/\s+/).map(w => w.charAt(0).toLocaleUpperCase('tr-TR') + w.slice(1).toLocaleLowerCase('tr-TR')).join(' ');
+    }
+
+    // Cihazın oy sayısını denetle (Maksimum 2 Hak)
+    function checkDeviceVoteStatus() {
+      const voteCount = parseInt(localStorage.getItem('gursu_climate_vote_count') || '0', 10);
+      const submitBtn = document.getElementById('submitVote');
+      const input1 = document.getElementById('name1');
+      const input2 = document.getElementById('name2');
+      const msg = document.getElementById('feedbackMsg');
+
+      if (voteCount >= 2) {
+        submitBtn.disabled = true;
+        submitBtn.innerText = "Oy Hakkınız Doldu (2/2) ✔️";
+        input1.disabled = true;
+        input2.disabled = true;
+        msg.textContent = "Bu cihazdan 2 kez oy kullanılmıştır (oy hakkınız doldu). Ekolojik geleceğe sunduğunuz destek için teşekkür ederiz!";
+        msg.className = "text-xs font-semibold text-sky-800 bg-sky-100/80 py-2 px-4 rounded-xl inline-block border border-sky-300";
+      } else if (voteCount === 1) {
+        submitBtn.disabled = false;
+        submitBtn.innerText = "Önerileri Kaydet ve Oyla (Kalan Hak: 1) 🚀";
+        msg.textContent = "Bu cihazdan 1 oy kullanıldı. 1 oy hakkınız daha bulunmaktadır.";
+        msg.className = "text-xs font-semibold text-emerald-700 bg-emerald-50 py-1.5 px-3 rounded-xl inline-block border border-emerald-200";
+      }
+    }
+
+    // Google E-Tablo'dan Canlı Oyları Çek
+    async function fetchLiveVotes() {
+      const statusEl = document.getElementById('syncStatus');
+      try {
+        statusEl.textContent = "E-Tablo ile eşitleniyor...";
+        const response = await fetch(SCRIPT_URL);
+        const data = await response.json();
+        
+        if (data.avatar1 && data.avatar2) {
+          store.avatar1 = data.avatar1;
+          store.avatar2 = data.avatar2;
+        }
+        statusEl.textContent = "Ortak Veri Havuzu Senkronize 🌿";
+        refreshBothPanels();
+      } catch (err) {
+        console.warn("Veri çekilemedi:", err);
+        statusEl.textContent = "Canlı Havuz Aktif";
+        refreshBothPanels();
+      }
+    }
+
+    // Kelime Bulutu Çizici
+    function drawCloud(canvasId, emptyNoticeId, dataList, colors) {
+      const entries = Object.entries(dataList).map(([word, count]) => [word, Number(count)]);
+      const canvas = document.getElementById(canvasId);
+      const emptyNotice = document.getElementById(emptyNoticeId);
+
+      if (entries.length === 0) {
+        emptyNotice.classList.remove('hidden');
+        const ctx = canvas.getContext('2d');
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        return;
+      }
+      emptyNotice.classList.add('hidden');
+
+      canvas.width = canvas.parentElement.offsetWidth;
+      canvas.height = 256;
+
+      const maxWeight = Math.max(...entries.map(e => e[1]), 1);
+
+      WordCloud(canvas, {
+        list: entries,
+        gridSize: Math.round(14 * canvas.width / 800),
+        weightFactor: function (size) {
+          return (size / maxWeight) * 36 + 13;
+        },
+        fontFamily: 'Outfit, sans-serif',
+        color: function () {
+          return colors[Math.floor(Math.random() * colors.length)];
+        },
+        rotateRatio: 0.15,
+        rotationSteps: 2,
+        backgroundColor: 'rgba(255,255,255,0)',
+        shuffle: false
+      });
+    }
+
+    // Top 10 Listesi ve Etiket Havuzunu Çizen Fonksiyon
+    function drawLists(listElId, tagElId, dataList, barColorClass) {
+      const sorted = Object.entries(dataList).sort((a, b) => b[1] - a[1]);
+      const top10 = sorted.slice(0, 10);
+      const topListEl = document.getElementById(listElId);
+      topListEl.innerHTML = '';
+
+      if (top10.length === 0) {
+        topListEl.innerHTML = '<li class="text-xs text-slate-400 py-3 text-center">Henüz isim önerisi yapılmadı.</li>';
+      }
+
+      const maxCount = top10.length > 0 ? top10[0][1] : 1;
+
+      top10.forEach(([name, count], index) => {
+        const percent = Math.round((count / maxCount) * 100);
+        const li = document.createElement('li');
+        li.className = "flex flex-col gap-1";
+        li.innerHTML = `
+          <div class="flex justify-between items-center text-xs font-semibold">
+            <span class="flex items-center gap-1.5 truncate">
+              <span class="text-[10px] w-4 h-4 rounded-full bg-slate-100 flex items-center justify-center font-bold text-slate-500">${index + 1}</span>
+              ${name}
+            </span>
+            <span class="text-slate-500 font-bold">${count} oy</span>
+          </div>
+          <div class="w-full bg-slate-100 h-1.5 rounded-full overflow-hidden">
+            <div class="${barColorClass} h-full rounded-full transition-all duration-500" style="width: ${percent}%"></div>
+          </div>
+        `;
+        topListEl.appendChild(li);
+      });
+
+      const tagsEl = document.getElementById(tagElId);
+      tagsEl.innerHTML = '';
+      sorted.forEach(([name, count]) => {
+        const badge = document.createElement('span');
+        badge.className = "px-2.5 py-0.5 bg-slate-100/80 hover:bg-slate-200 text-slate-700 text-[11px] font-medium rounded-md inline-flex items-center gap-1.5 transition";
+        badge.innerHTML = `${name} <span class="text-[9px] bg-white px-1 rounded font-bold text-slate-500">${count}</span>`;
+        tagsEl.appendChild(badge);
+      });
+    }
+
+    // Her iki paneli eş zamanlı yenile
+    function refreshBothPanels() {
+      // Sol Taraf (Kız Avatar)
+      drawCloud('cloudCanvas1', 'cloudEmpty1', store.avatar1, ['#15803d', '#16a34a', '#22c55e', '#059669', '#0f766e']);
+      drawLists('topList1', 'allTags1', store.avatar1, 'bg-emerald-500');
+
+      // Sağ Taraf (Erkek Avatar)
+      drawCloud('cloudCanvas2', 'cloudEmpty2', store.avatar2, ['#0369a1', '#0284c7', '#38bdf8', '#2563eb', '#0891b2']);
+      drawLists('topList2', 'allTags2', store.avatar2, 'bg-sky-500');
+    }
+
+    // Form Gönderim Aksiyonu
+    document.getElementById('submitVote').addEventListener('click', async () => {
+      let voteCount = parseInt(localStorage.getItem('gursu_climate_vote_count') || '0', 10);
+      
+      if (voteCount >= 2) {
+        alert("Bu cihazdan en fazla 2 kez oy kullanılabilir. Oy hakkınız dolmuştur.");
+        return;
+      }
+
+      const input1 = document.getElementById('name1');
+      const input2 = document.getElementById('name2');
+      const submitBtn = document.getElementById('submitVote');
+      const msg = document.getElementById('feedbackMsg');
+
+      const val1 = capitalize(input1.value);
+      const val2 = capitalize(input2.value);
+
+      if (!val1 && !val2) {
+        msg.textContent = "Lütfen en az bir avatar için isim önerisinde bulunun.";
+        msg.className = "text-xs font-semibold text-rose-500";
+        return;
+      }
+
+      submitBtn.disabled = true;
+      msg.textContent = "Öneriniz merkeze iletiliyor, lütfen bekleyin...";
+      msg.className = "text-xs font-semibold text-slate-500";
+
+      // Anlık arayüze ekle (iyimser güncelleme)
+      if (val1) store.avatar1[val1] = (store.avatar1[val1] || 0) + 1;
+      if (val2) store.avatar2[val2] = (store.avatar2[val2] || 0) + 1;
+      refreshBothPanels();
+
+      try {
+        await fetch(SCRIPT_URL, {
+          method: "POST",
+          mode: "no-cors",
+          headers: { "Content-Type": "text/plain" },
+          body: JSON.stringify({ avatar1: val1, avatar2: val2 })
+        });
+
+        // Oy sayacını 1 artır ve yerel hafızaya kaydet
+        voteCount++;
+        localStorage.setItem('gursu_climate_vote_count', voteCount.toString());
+        
+        input1.value = '';
+        input2.value = '';
+
+        checkDeviceVoteStatus();
+
+        confetti({
+          particleCount: 85,
+          spread: 80,
+          origin: { y: 0.75 }
+        });
+
+        setTimeout(fetchLiveVotes, 2000);
+      } catch (err) {
+        msg.textContent = "Bağlantı hatası oluştu, ancak öneriniz geçici olarak eklendi.";
+        msg.className = "text-xs font-semibold text-amber-600";
+      }
+    });
+
+    window.addEventListener('load', () => {
+      checkDeviceVoteStatus();
+      fetchLiveVotes();
+    });
+
+    window.addEventListener('resize', refreshBothPanels);
+  </script>
+</body>
+</html>
