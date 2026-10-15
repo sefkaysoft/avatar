@@ -1,0 +1,1225 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Advanced ISO 14046 & WFN Water Audit | BlueLightS</title>
+
+    <!-- FontAwesome Icons & Google Fonts -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+
+    <!-- Chart.js and Exporting Libraries -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
+    <style>
+        :root {
+            --primary: #0077b6;
+            --secondary: #00b4d8;
+            --accent: #90e0ef;
+            --dark: #03045e;
+            --green: #2a9d8f;
+            --grey: #6c757d;
+            --warning: #e76f51;
+            --light-bg: #f4f8fb;
+            --white: #ffffff;
+            --card-shadow: 0 16px 40px rgba(3, 4, 94, 0.12);
+        }
+
+        * { box-sizing: border-box; font-family: 'Poppins', sans-serif; }
+        body {
+            background: linear-gradient(135deg, #e0f2fe 0%, #f4f8fb 100%);
+            color: #2d3748;
+            margin: 0;
+            padding: 25px 15px;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .wizard-card {
+            width: 100%;
+            max-width: 1050px;
+            background: var(--white);
+            border-radius: 24px;
+            box-shadow: var(--card-shadow);
+            padding: 45px;
+            border-top: 10px solid var(--primary);
+            position: relative;
+        }
+
+        .lang-switcher {
+            position: absolute;
+            top: 25px;
+            right: 25px;
+            display: flex;
+            gap: 8px;
+            background: #f1f5f9;
+            padding: 4px;
+            border-radius: 12px;
+            border: 1px solid #cbd5e0;
+        }
+
+        .lang-btn {
+            border: none;
+            background: transparent;
+            padding: 6px 12px;
+            border-radius: 8px;
+            font-size: 12px;
+            font-weight: 700;
+            cursor: pointer;
+            color: var(--grey);
+            transition: all 0.2s ease;
+        }
+
+        .lang-btn.active {
+            background: var(--primary);
+            color: var(--white);
+            box-shadow: 0 2px 8px rgba(0, 119, 182, 0.3);
+        }
+
+        .wizard-header {
+            text-align: center;
+            margin-bottom: 30px;
+            margin-top: 10px;
+        }
+
+        .wizard-header h1 {
+            color: var(--dark);
+            font-size: 28px;
+            font-weight: 700;
+            margin: 0 0 10px 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+        }
+
+        .wizard-header p { color: var(--grey); font-size: 15px; margin: 0; }
+
+        .progress-container { margin-bottom: 35px; }
+        .progress-bar-bg {
+            background-color: #e2e8f0;
+            height: 10px;
+            border-radius: 10px;
+            width: 100%;
+            overflow: hidden;
+            margin-bottom: 20px;
+        }
+
+        .progress-bar-fill {
+            height: 100%;
+            width: 20%;
+            background: linear-gradient(90deg, var(--secondary), var(--primary));
+            transition: width 0.4s ease;
+        }
+
+        .steps-indicators { display: flex; justify-content: space-between; }
+        .step-node {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            font-size: 13px;
+            color: var(--grey);
+            font-weight: 500;
+            transition: color 0.3s ease;
+        }
+
+        .step-node.active { color: var(--primary); font-weight: 700; }
+        .step-icon-bubble {
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            background-color: #edf2f7;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 8px;
+            font-size: 18px;
+            transition: all 0.3s ease;
+        }
+
+        .step-node.active .step-icon-bubble {
+            background-color: var(--primary);
+            color: var(--white);
+            box-shadow: 0 6px 16px rgba(0, 119, 182, 0.35);
+        }
+
+        .wizard-step { display: none; animation: fadeIn 0.4s ease forwards; }
+        .wizard-step.active-step { display: block; }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .step-title {
+            font-size: 19px;
+            font-weight: 600;
+            color: var(--dark);
+            margin-bottom: 25px;
+            padding-bottom: 10px;
+            border-bottom: 3px solid var(--accent);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 22px; }
+        .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 18px; }
+
+        @media (max-width: 768px) {
+            .grid-2, .grid-3 { grid-template-columns: 1fr; }
+            .wizard-card { padding: 25px 20px; }
+            .lang-switcher { position: relative; top: 0; right: 0; margin-bottom: 15px; justify-content: center; }
+        }
+
+        .form-group { display: flex; flex-direction: column; }
+        .form-group label {
+            font-size: 13px;
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: #2d3748;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .form-group label i { color: var(--primary); font-size: 15px; }
+        .input-wrapper input, .input-wrapper select {
+            width: 100%;
+            padding: 12px 16px;
+            border: 2px solid #cbd5e0;
+            border-radius: 12px;
+            font-size: 14px;
+            outline: none;
+            transition: all 0.2s ease;
+            background-color: #fafbfc;
+        }
+
+        .input-wrapper input:focus, .input-wrapper select:focus {
+            border-color: var(--primary);
+            background-color: var(--white);
+            box-shadow: 0 0 0 4px rgba(0, 180, 216, 0.18);
+        }
+
+        .wizard-nav {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 35px;
+            padding-top: 25px;
+            border-top: 2px solid #e2e8f0;
+        }
+
+        .btn-nav {
+            padding: 12px 28px;
+            border-radius: 12px;
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+            border: none;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            transition: all 0.2s ease;
+        }
+
+        .btn-prev { background-color: #e2e8f0; color: #4a5568; }
+        .btn-prev:hover { background-color: #cbd5e0; }
+        .btn-next {
+            background: linear-gradient(135deg, var(--secondary), var(--primary));
+            color: var(--white);
+            margin-left: auto;
+        }
+
+        .btn-next:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(0, 119, 182, 0.3);
+        }
+
+        /* OUTCOME AND REPORT styling */
+        .certificate {
+            background: #ffffff;
+            border: 12px solid var(--dark);
+            outline: 4px dashed var(--secondary);
+            outline-offset: -16px;
+            padding: 40px 30px;
+            border-radius: 20px;
+            position: relative;
+            background-image: radial-gradient(circle at top right, rgba(144, 224, 239, 0.25), transparent 70%);
+        }
+
+        .cert-header { text-align: center; margin-bottom: 25px; }
+        .cert-title {
+            font-size: 26px;
+            font-weight: 800;
+            color: var(--dark);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin: 0;
+        }
+
+        .cert-subtitle { font-size: 13px; color: var(--primary); font-weight: 700; margin-top: 6px; }
+        .cert-info { text-align: center; font-size: 15px; line-height: 1.6; margin-bottom: 30px; }
+        .student-name { font-size: 24px; font-weight: 800; color: var(--primary); text-decoration: underline; }
+
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+            margin-bottom: 25px;
+            text-align: center;
+        }
+
+        .metric-box {
+            padding: 16px 12px;
+            border-radius: 14px;
+            color: #fff;
+            box-shadow: 0 6px 14px rgba(0,0,0,0.06);
+        }
+
+        .blue-water { background-color: var(--primary); }
+        .green-water { background-color: var(--green); }
+        .grey-water { background-color: var(--grey); }
+
+        .metric-val { font-size: 22px; font-weight: 800; }
+        .metric-lbl { font-size: 12px; opacity: 0.95; margin-top: 4px; }
+
+        .total-box {
+            background: rgba(3, 4, 94, 0.04);
+            border: 2px dashed var(--primary);
+            padding: 18px;
+            border-radius: 14px;
+            text-align: center;
+            margin-bottom: 25px;
+        }
+
+        .total-val { font-size: 28px; font-weight: 800; color: var(--dark); }
+
+        .analytics-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin: 25px 0; }
+        @media (max-width: 768px) { .analytics-grid { grid-template-columns: 1fr; } }
+
+        .chart-card {
+            background: #f8fafc;
+            padding: 20px;
+            border-radius: 16px;
+            border: 1px solid #e2e8f0;
+            text-align: center;
+        }
+
+        .chart-card h4 {
+            margin: 0 0 15px 0;
+            color: var(--dark);
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .chart-wrapper { position: relative; height: 220px; width: 100%; }
+
+        .insights-section { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin: 20px 0; }
+        @media (max-width: 768px) { .insights-section { grid-template-columns: 1fr; } }
+
+        .insight-card {
+            padding: 18px;
+            border-radius: 14px;
+            font-size: 13px;
+            line-height: 1.6;
+            border-left: 5px solid var(--primary);
+            background-color: #f8fafc;
+        }
+
+        .insight-card.danger { border-left-color: var(--warning); background-color: #fff5f5; }
+        .insight-card h5 { margin: 0 0 8px 0; font-size: 14px; color: var(--dark); display: flex; align-items: center; gap: 8px; }
+
+        .recommendations-box {
+            background: #f0fdf4;
+            border: 1px solid #bbf7d0;
+            padding: 20px;
+            border-radius: 16px;
+            margin-top: 20px;
+        }
+
+        .recommendations-box h4 { margin: 0 0 12px 0; color: #166534; font-size: 15px; display: flex; align-items: center; gap: 8px; }
+        .recommendations-list { padding-left: 20px; margin: 0; color: #15803d; font-size: 13px; }
+        .recommendations-list li { margin-bottom: 8px; }
+
+        .cert-footer {
+            display: flex;
+            justify-content: space-between;
+            font-size: 12px;
+            color: #718096;
+            border-top: 1px solid #e2e8f0;
+            padding-top: 18px;
+            margin-top: 25px;
+        }
+
+        .action-btns { display: flex; gap: 15px; margin-top: 30px; }
+        .btn-download {
+            flex: 1;
+            padding: 14px;
+            border: none;
+            border-radius: 12px;
+            font-weight: 600;
+            color: #fff;
+            cursor: pointer;
+            font-size: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            transition: all 0.2s ease;
+        }
+
+        .btn-png { background-color: #2a9d8f; }
+        .btn-pdf { background-color: #e63946; }
+        .btn-download:hover { opacity: 0.92; transform: translateY(-2px); }
+    </style>
+</head>
+<body>
+
+<div class="wizard-card">
+    <!-- LANGUAGE SWITCHER -->
+    <div class="lang-switcher">
+        <button class="lang-btn active" onclick="setLanguage('tr')">TR</button>
+        <button class="lang-btn" onclick="setLanguage('en')">EN</button>
+        <button class="lang-btn" onclick="setLanguage('es')">ES</button>
+    </div>
+
+    <div class="wizard-header">
+        <h1><i class="fa-solid fa-droplet" style="color: var(--primary);"></i> <span id="txtHeaderTitle">Gelişmiş Su Ayak İzi Denetimi</span></h1>
+        <p>EU Mission: Restore Our Ocean and Waters | BlueLightS eTwinning Project</p>
+    </div>
+
+    <!-- PROGRESS BAR & STEP INDICATORS -->
+    <div class="progress-container">
+        <div class="progress-bar-bg">
+            <div class="progress-bar-fill" id="progressBar"></div>
+        </div>
+        <div class="steps-indicators">
+            <div class="step-node active" id="node1">
+                <div class="step-icon-bubble"><i class="fa-solid fa-user"></i></div>
+                <span id="txtNode1">Profil</span>
+            </div>
+            <div class="step-node" id="node2">
+                <div class="step-icon-bubble"><i class="fa-solid fa-house-water"></i></div>
+                <span id="txtNode2">Evsel</span>
+            </div>
+            <div class="step-node" id="node3">
+                <div class="step-icon-bubble"><i class="fa-solid fa-utensils"></i></div>
+                <span id="txtNode3">Beslenme</span>
+            </div>
+            <div class="step-node" id="node4">
+                <div class="step-icon-bubble"><i class="fa-solid fa-cart-shopping"></i></div>
+                <span id="txtNode4">Tüketim</span>
+            </div>
+            <div class="step-node" id="node5">
+                <div class="step-icon-bubble"><i class="fa-solid fa-chart-pie"></i></div>
+                <span id="txtNode5">Rapor</span>
+            </div>
+        </div>
+    </div>
+
+    <form id="wizardForm">
+        <!-- STEP 1: PARTICIPANT PROFILE -->
+        <div class="wizard-step active-step" id="step1">
+            <div class="step-title"><i class="fa-solid fa-address-card"></i> <span id="txtStep1Title">Adım 1: Katılımcı Profili</span></div>
+            <div class="grid-2">
+                <div class="form-group">
+                    <label for="studentName"><i class="fa-solid fa-user-graduate"></i> <span id="lblStudentName">Öğrenci Adı ve Soyadı İlk Harfi:</span></label>
+                    <div class="input-wrapper">
+                        <input type="text" id="studentName" placeholder="Örn: Ahmet K." required>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="schoolName"><i class="fa-solid fa-school"></i> <span id="lblSchoolName">Okul Adı:</span></label>
+                    <div class="input-wrapper">
+                        <input type="text" id="schoolName" placeholder="Örn: Gürsu BİLSEM" required>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="familyMembers"><i class="fa-solid fa-users"></i> <span id="lblFamilyMembers">Ailedeki Birey Sayısı:</span></label>
+                    <div class="input-wrapper">
+                        <input type="number" id="familyMembers" min="1" value="4" required>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="country"><i class="fa-solid fa-earth-europe"></i> <span id="lblCountry">Ülke:</span></label>
+                    <div class="input-wrapper">
+                        <select id="country">
+                            <option value="TR">Türkiye</option>
+                            <option value="ES">Spain (İspanya)</option>
+                            <option value="FR">France (Fransa)</option>
+                            <option value="IT">Italy (İtalya)</option>
+                            <option value="RO">Romania (Romanya)</option>
+                            <option value="PT">Portugal (Portekiz)</option>
+                            <option value="OTHER">Diğer Avrupa Ülkesi</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- STEP 2: DETAILED DOMESTIC USE & REUSE -->
+        <div class="wizard-step" id="step2">
+            <div class="step-title"><i class="fa-solid fa-faucet-drip"></i> <span id="txtStep2Title">Adım 2: Doğrudan Evsel Su Tüketimi & Döngüsel Kazanım</span></div>
+            <div class="grid-3">
+                <div class="form-group">
+                    <label for="shower"><i class="fa-solid fa-shower"></i> <span id="lblShower">Duş Süresi (Dk/Gün):</span></label>
+                    <div class="input-wrapper"><input type="number" id="shower" value="8" min="0"></div>
+                </div>
+                <div class="form-group">
+                    <label for="tap"><i class="fa-solid fa-faucet"></i> <span id="lblTap">Açık Musluk (Dk/Gün):</span></label>
+                    <div class="input-wrapper"><input type="number" id="tap" value="5" min="0"></div>
+                </div>
+                <div class="form-group">
+                    <label for="flush"><i class="fa-solid fa-toilet"></i> <span id="lblFlush">Sifon Kullanımı (Defa/Gün):</span></label>
+                    <div class="input-wrapper"><input type="number" id="flush" value="5" min="0"></div>
+                </div>
+                <div class="form-group">
+                    <label for="dishwasher"><i class="fa-solid fa-soap"></i> <span id="lblDishwasher">Bulaşık Makinesi (Yıkama/Hafta):</span></label>
+                    <div class="input-wrapper"><input type="number" id="dishwasher" value="4" min="0"></div>
+                </div>
+                <div class="form-group">
+                    <label for="washingMachine"><i class="fa-solid fa-shirt"></i> <span id="lblWashingMachine">Çamaşır Makinesi (Yıkama/Hafta):</span></label>
+                    <div class="input-wrapper"><input type="number" id="washingMachine" value="3" min="0"></div>
+                </div>
+                <div class="form-group">
+                    <label for="leakage"><i class="fa-solid fa-triangle-exclamation"></i> <span id="lblLeakage">Damlayan/Sızdıran Musluk Var mı?:</span></label>
+                    <div class="input-wrapper">
+                        <select id="leakage">
+                            <option value="0" id="optLeakNo">Hayır (Yok)</option>
+                            <option value="30" id="optLeakYes">Evet (Var ~30L/Gün İsraf)</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="rainHarvest"><i class="fa-solid fa-cloud-rain"></i> <span id="lblRainHarvest">Yağmur Suyu Hasadı/Toplama Var mı?:</span></label>
+                    <div class="input-wrapper">
+                        <select id="rainHarvest">
+                            <option value="no" id="optRainNo">Hayır (Kullanılmıyor)</option>
+                            <option value="yes" id="optRainYes">Evet (Bahçe/Sulama için yağmur suyu toplanıyor)</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="greywater"><i class="fa-solid fa-recycle"></i> <span id="lblGreywater">Gri Su Arıtma/Geri Kazanım Sistemi?:</span></label>
+                    <div class="input-wrapper">
+                        <select id="greywater">
+                            <option value="no" id="optGreyNo">Hayır (Kullanılmıyor)</option>
+                            <option value="yes" id="optGreyYes">Evet (Lavabo/Duş suyu sifonlarda kullanılıyor)</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="lowFlowFaucets"><i class="fa-solid fa-hand-holding-droplet"></i> <span id="lblLowFlow">Tasarruflu Armatür (Debi Sınırlandırıcı)?:</span></label>
+                    <div class="input-wrapper">
+                        <select id="lowFlowFaucets">
+                            <option value="no" id="optFlowNo">Hayır (Standart)</option>
+                            <option value="yes" id="optFlowYes">Evet (Musluk/Duş perlatörü var)</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- STEP 3: DIET & DIETARY FOOTPRINT -->
+        <div class="wizard-step" id="step3">
+            <div class="step-title"><i class="fa-solid fa-bowl-food"></i> <span id="txtStep3Title">Adım 3: Beslenme ve Gıda Su Ayak İzi</span></div>
+            <div class="grid-2">
+                <div class="form-group">
+                    <label for="dietType"><i class="fa-solid fa-drumstick-bite"></i> <span id="lblDietType">Beslenme Alışkanlığı:</span></label>
+                    <div class="input-wrapper">
+                        <select id="dietType">
+                            <option value="meat" id="optMeat">Ağırlıklı Et Tüketimi (~4.800 L/gün)</option>
+                            <option value="balanced" selected id="optBalanced">Dengeli Tüketim (~3.200 L/gün)</option>
+                            <option value="vegetarian" id="optVeg">Vejetaryen (~2.100 L/gün)</option>
+                            <option value="vegan" id="optVegan">Vegan (~1.400 L/gün)</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="coffeeTea"><i class="fa-solid fa-mug-hot"></i> <span id="lblCoffeeTea">Çay ve Kahve (Bardak/Gün):</span></label>
+                    <div class="input-wrapper"><input type="number" id="coffeeTea" value="3" min="0"></div>
+                </div>
+                <div class="form-group">
+                    <label for="dairy"><i class="fa-solid fa-cow"></i> <span id="lblDairy">Süt ve Peynir Ürünleri (Gram/Gün):</span></label>
+                    <div class="input-wrapper"><input type="number" id="dairy" value="200" min="0"></div>
+                </div>
+                <div class="form-group">
+                    <label for="processedFood"><i class="fa-solid fa-box-open"></i> <span id="lblProcessed">Paketli/İşlenmiş Gıda Sıklığı:</span></label>
+                    <div class="input-wrapper">
+                        <select id="processedFood">
+                            <option value="high" id="optProcHigh">Yüksek (Her gün paketli gıda)</option>
+                            <option value="medium" selected id="optProcMed">Orta (Haftada 2-3 kez)</option>
+                            <option value="low" id="optProcLow">Düşük (Çoğunlukla ev yapımı)</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-group" style="grid-column: span 2;">
+                    <label for="foodWaste"><i class="fa-solid fa-trash-can"></i> <span id="lblFoodWaste">Evsel Gıda İsrafı/Atığı (Gram/Gün):</span></label>
+                    <div class="input-wrapper"><input type="number" id="foodWaste" value="150" min="0"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- STEP 4: CONSUMPTION, GOODS & TRANSPORT -->
+        <div class="wizard-step" id="step4">
+            <div class="step-title"><i class="fa-solid fa-cart-flatbed"></i> <span id="txtStep4Title">Adım 4: Tüketim, Ürünler ve Ulaşım</span></div>
+            <div class="grid-2">
+                <div class="form-group">
+                    <label for="clothes"><i class="fa-solid fa-shirt"></i> <span id="lblClothes">Yeni Kıyafet Alımı (Adet/Ay):</span></label>
+                    <div class="input-wrapper"><input type="number" id="clothes" value="2" min="0"></div>
+                </div>
+                <div class="form-group">
+                    <label for="screenTime"><i class="fa-solid fa-laptop-code"></i> <span id="lblScreenTime">Ekran/İnternet Saati (Saat/Gün):</span></label>
+                    <div class="input-wrapper"><input type="number" id="screenTime" value="5" min="0"></div>
+                </div>
+                <div class="form-group">
+                    <label for="carKm"><i class="fa-solid fa-car"></i> <span id="lblCarKm">Özel Araç İle Yolculuk (Km/Hafta):</span></label>
+                    <div class="input-wrapper"><input type="number" id="carKm" value="60" min="0"></div>
+                </div>
+                <div class="form-group">
+                    <label for="paper"><i class="fa-solid fa-box"></i> <span id="lblPaper">Kağıt ve Defter Kullanımı (Sayfa/Gün):</span></label>
+                    <div class="input-wrapper"><input type="number" id="paper" value="10" min="0"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- STEP 5: AUDIT REPORT & DEEP ANALYTICS -->
+        <div class="wizard-step" id="step5">
+            <div id="report-section" style="display: block;">
+                <div class="certificate" id="certificate">
+                    <div class="cert-header">
+                        <h2 class="cert-title" id="txtCertTitle">SU AYAK İZİ DENETİM RAPORU</h2>
+                        <div class="cert-subtitle">EU Mission: Restore Our Ocean and Waters | BlueLightS Citizen Science</div>
+                    </div>
+
+                    <div class="cert-info">
+                        <span id="txtCertBody1">Bu resmi denetim raporu,</span><br>
+                        <span class="student-name" id="rptStudentName">Student Name</span><br>
+                        <span id="txtCertBody2">tarafından</span> <strong id="rptSchoolName">School Name</strong> (<span id="rptCountry">Country</span>) <span id="txtCertBody3">bünyesinde ISO 14046 standartlarına uygun evsel su ayak izi analizinin tamamlandığını belgelemiştir.</span>
+                    </div>
+
+                    <!-- ISO WATER METRICS -->
+                    <div class="metrics-grid">
+                        <div class="metric-box blue-water">
+                            <div class="metric-val" id="rptBlue">0 L</div>
+                            <div class="metric-lbl"><i class="fa-solid fa-water"></i> <span id="lblBlueWater">Mavi Su (Yüzey/Yeraltı)</span></div>
+                        </div>
+                        <div class="metric-box green-water">
+                            <div class="metric-val" id="rptGreen">0 L</div>
+                            <div class="metric-lbl"><i class="fa-solid fa-seedling"></i> <span id="lblGreenWater">Yeşil Su (Yağmur/Tarım)</span></div>
+                        </div>
+                        <div class="metric-box grey-water">
+                            <div class="metric-val" id="rptGrey">0 L</div>
+                            <div class="metric-lbl"><i class="fa-solid fa-smog"></i> <span id="lblGreyWater">Gri Su (Seyreltme/Kirlilik)</span></div>
+                        </div>
+                    </div>
+
+                    <div class="total-box">
+                        <span style="font-size: 12px; color: #555; text-transform: uppercase;" id="lblTotalHousehold">TOPLAM GÜNLÜK EVSEL SU İZİ</span>
+                        <div class="total-val" id="rptTotal">0 Liters / Day</div>
+                        <div style="font-size: 13px; color: var(--primary); margin-top: 5px;">
+                            <span id="lblPerPerson">Kişi Başı:</span> <strong id="rptPerPerson">0 L/gün</strong> | EU Ort: ~3.800 L | TR Ort: ~4.100 L
+                        </div>
+                    </div>
+
+                    <!-- CIRCULAR SAVINGS HIGHLIGHT -->
+                    <div style="background-color: #e0f2fe; border: 2.5px solid var(--secondary); padding: 15px; border-radius: 14px; text-align: center; margin-bottom: 25px; display: none;" id="circularHighlight">
+                        <i class="fa-solid fa-circle-nodes" style="font-size: 20px; color: var(--primary); margin-bottom: 5px;"></i><br>
+                        <span id="txtCircularSavings">Döngüsel Ekonomi Su Kazanımı: Yağmur hasadı ve gri su geri kazanımınız sayesinde günde <strong><span id="savedLitres">0</span> L</strong> suyun israfı önlendi!</span>
+                    </div>
+
+                    <!-- DUAL GRAPHICS SECTION -->
+                    <div class="analytics-grid">
+                        <div class="chart-card">
+                            <h4><i class="fa-solid fa-chart-pie" style="color: var(--primary);"></i> <span id="txtPieTitle">ISO Su Tipi Dağılımı</span></h4>
+                            <div class="chart-wrapper">
+                                <canvas id="pieChart"></canvas>
+                            </div>
+                        </div>
+                        <div class="chart-card">
+                            <h4><i class="fa-solid fa-chart-column" style="color: var(--green);"></i> <span id="txtBarTitle">Kategori Bazlı Tüketim Kırılımı</span></h4>
+                            <div class="chart-wrapper">
+                                <canvas id="barChart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- AI INSIGHTS & BENCHMARKING -->
+                    <div class="insights-section">
+                        <div class="insight-card" id="benchmarkCard">
+                            <h5><i class="fa-solid fa-scale-balanced"></i> <span id="txtBenchTitle">Bölgesel Kıyaslama Analizi</span></h5>
+                            <div id="benchmarkText">Su izi verileri analiz ediliyor...</div>
+                        </div>
+                        <div class="insight-card danger" id="riskCard">
+                            <h5><i class="fa-solid fa-triangle-exclamation" style="color: var(--warning);"></i> <span id="txtRiskTitle">Çevresel Eşdeğerlik Etkisi</span></h5>
+                            <div id="riskText">Eşdeğerlikler hesaplanıyor...</div>
+                        </div>
+                    </div>
+
+                    <!-- TAILORED ACTION PLAN -->
+                    <div class="recommendations-box">
+                        <h4><i class="fa-solid fa-bullseye"></i> <span id="txtPlanTitle">Kişiselleştirilmiş Mavi Tasarruf Taahhüt Planı</span></h4>
+                        <ul class="recommendations-list" id="recommendationsList">
+                            <!-- Dynamic Recommendations -->
+                        </ul>
+                    </div>
+
+                    <div class="cert-footer">
+                        <span><span id="lblIssueDate">Düzenleme Tarihi:</span> <strong id="rptDate">15.10.2026</strong></span>
+                        <span>Verification ID: <strong id="rptUUID">BLS-2026-99</strong></span>
+                        <span>BlueLightS Mentorship Network</span>
+                    </div>
+                </div>
+
+                <div class="action-btns">
+                    <button type="button" class="btn-download btn-png" onclick="downloadPNG()"><i class="fa-solid fa-image"></i> <span id="btnPngText">Görsel Olarak İndir (PNG)</span></button>
+                    <button type="button" class="btn-download btn-pdf" onclick="downloadPDF()"><i class="fa-solid fa-file-pdf"></i> <span id="btnPdfText">Belge Olarak İndir (PDF)</span></button>
+                </div>
+            </div>
+        </div>
+
+        <!-- NAVIGATION BUTTONS -->
+        <div class="wizard-nav">
+            <button type="button" class="btn-nav btn-prev" id="btnPrev" onclick="navigateStep(-1)" style="display: none;">
+                <i class="fa-solid fa-arrow-left"></i> <span id="btnPrevText">Geri</span>
+            </button>
+            <button type="button" class="btn-nav btn-next" id="btnNext" onclick="navigateStep(1)">
+                <span id="btnNextText">İleri</span> <i class="fa-solid fa-arrow-right"></i>
+            </button>
+        </div>
+    </form>
+</div>
+
+<script>
+    let currentStep = 1;
+    const totalSteps = 5;
+    let pieChartInstance = null;
+    let barChartInstance = null;
+    let currentLang = 'tr';
+
+    // DİL SÖZLÜĞÜ (TR, EN, ES)
+    const i18n = {
+        tr: {
+            headerTitle: "Gelişmiş Su Ayak İzi Denetimi",
+            node1: "Profil", node2: "Evsel", node3: "Beslenme", node4: "Tüketim", node5: "Rapor",
+            step1Title: "Adım 1: Katılımcı Profili",
+            lblStudentName: "Öğrenci Adı ve Soyadı İlk Harfi:",
+            lblSchoolName: "Okul Adı:",
+            lblFamilyMembers: "Ailedeki Birey Sayısı:",
+            lblCountry: "Ülke:",
+            step2Title: "Adım 2: Doğrudan Evsel Su Tüketimi & Döngüsel Kazanım",
+            lblShower: "Duş Süresi (Dk/Gün):",
+            lblTap: "Açık Musluk (Dk/Gün):",
+            lblFlush: "Sifon Kullanımı (Defa/Gün):",
+            lblDishwasher: "Bulaşık Makinesi (Yıkama/Hafta):",
+            lblWashingMachine: "Çamaşır Makinesi (Yıkama/Hafta):",
+            lblLeakage: "Damlayan/Sızdıran Musluk Var mı?:",
+            optLeakNo: "Hayır (Yok)", optLeakYes: "Evet (Var ~30L/Gün İsraf)",
+            lblRainHarvest: "Yağmur Suyu Hasadı/Toplama Var mı?:",
+            optRainNo: "Hayır (Kullanılmıyor)", optRainYes: "Evet (Bahçe/Sulama için yağmur suyu toplanıyor)",
+            lblGreywater: "Gri Su Arıtma/Geri Kazanım Sistemi?:",
+            optGreyNo: "Hayır (Kullanılmıyor)", optGreyYes: "Evet (Lavabo/Duş suyu sifonlarda kullanılıyor)",
+            lblLowFlow: "Tasarruflu Armatür (Debi Sınırlandırıcı)?:",
+            optFlowNo: "Hayır (Standart)", optFlowYes: "Evet (Musluk/Duş perlatörü var)",
+            step3Title: "Adım 3: Beslenme ve Gıda Su Ayak İzi",
+            lblDietType: "Beslenme Alışkanlığı:",
+            optMeat: "Ağırlıklı Et Tüketimi (~4.800 L/gün)", optBalanced: "Dengeli Tüketim (~3.200 L/gün)",
+            optVeg: "Vejetaryen (~2.100 L/gün)", optVegan: "Vegan (~1.400 L/gün)",
+            lblCoffeeTea: "Çay ve Kahve (Bardak/Gün):", lblDairy: "Süt ve Peynir Ürünleri (Gram/Gün):",
+            lblProcessed: "Paketli/İşlenmiş Gıda Sıklığı:",
+            optProcHigh: "Yüksek (Her gün paketli gıda)", optProcMed: "Orta (Haftada 2-3 kez)", optProcLow: "Düşük (Çoğunlukla ev yapımı)",
+            lblFoodWaste: "Evsel Gıda İsrafı/Atığı (Gram/Gün):",
+            step4Title: "Adım 4: Tüketim, Ürünler ve Ulaşım",
+            lblClothes: "Yeni Kıyafet Alımı (Adet/Ay):", lblScreenTime: "Ekran/İnternet Saati (Saat/Gün):",
+            lblCarKm: "Özel Araç İle Yolculuk (Km/Hafta):", lblPaper: "Kağıt ve Defter Kullanımı (Sayfa/Gün):",
+            certTitle: "SU AYAK İZİ DENETİM RAPORU",
+            certBody1: "Bu resmi denetim raporu,", certBody2: "tarafından", certBody3: "bünyesinde ISO 14046 standartlarına uygun evsel su ayak izi analizinin tamamlandığını belgelemiştir.",
+            lblBlueWater: "Mavi Su (Yüzey/Yeraltı)", lblGreenWater: "Yeşil Su (Yağmur/Tarım)", lblGreyWater: "Gri Su (Seyreltme/Kirlilik)",
+            lblTotalHousehold: "TOPLAM GÜNLÜK EVSEL SU İZİ", lblPerPerson: "Kişi Başı:",
+            txtCircularSavings: "Döngüsel Ekonomi Su Kazanımı: Yağmur hasadı ve gri su geri kazanımınız sayesinde günde <strong><span id=\"savedLitres\">0</span> L</strong> suyun israfı önlendi!",
+            txtPieTitle: "ISO Su Tipi Dağılımı", txtBarTitle: "Kategori Bazlı Tüketim Kırılımı",
+            txtBenchTitle: "Bölgesel Kıyaslama Analizi", txtRiskTitle: "Çevresel Eşdeğerlik Etkisi",
+            txtPlanTitle: "Kişiselleştirilmiş Mavi Tasarruf Taahhüt Planı",
+            lblIssueDate: "Düzenleme Tarihi:",
+            btnPngText: "Görsel Olarak İndir (PNG)", btnPdfText: "Belge Olarak İndir (PDF)",
+            btnPrevText: "Geri", btnNextText: "İleri", btnRunAuditText: "Denetimi Çalıştır"
+        },
+        en: {
+            headerTitle: "Advanced Water Footprint Audit",
+            node1: "Profile", node2: "Domestic", node3: "Diet", node4: "Consumer", node5: "Report",
+            step1Title: "Step 1: Participant Profile",
+            lblStudentName: "Student Name & Surname Initial:",
+            lblSchoolName: "School Name:",
+            lblFamilyMembers: "Household Size:",
+            lblCountry: "Country:",
+            step2Title: "Step 2: Direct Domestic Water Use & Circular Recovery",
+            lblShower: "Shower Time (Min/Day):",
+            lblTap: "Running Tap (Min/Day):",
+            lblFlush: "Toilet Flushes (Times/Day):",
+            lblDishwasher: "Dishwasher Loads/Week:",
+            lblWashingMachine: "Washing Machine Loads/Week:",
+            lblLeakage: "Any Leaking Taps/Pipes?:",
+            optLeakNo: "No (None)", optLeakYes: "Yes (~30L/Day Waste)",
+            lblRainHarvest: "Do you harvest rainwater?:",
+            optRainNo: "No (Not used)", optRainYes: "Yes (Harvested for garden/cleaning)",
+            lblGreywater: "Greywater recycling system?:",
+            optGreyNo: "No (Not used)", optGreyYes: "Yes (Sink/Shower water used in toilet)",
+            lblLowFlow: "Water-Saving faucets (flow regulator)?:",
+            optFlowNo: "No (Standard)", optFlowYes: "Yes (With aerators/water-saving heads)",
+            step3Title: "Step 3: Dietary Virtual Water Footprint",
+            lblDietType: "Primary Dietary Pattern:",
+            optMeat: "Heavy Meat-Based (~4,800 L/day)", optBalanced: "Balanced Omnivore (~3,200 L/day)",
+            optVeg: "Vegetarian (~2,100 L/day)", optVegan: "Vegan (~1,400 L/day)",
+            lblCoffeeTea: "Coffee & Tea (Cups/Day):", lblDairy: "Milk/Dairy Products (Grams/Day):",
+            lblProcessed: "Processed Food Frequency:",
+            optProcHigh: "High (Daily processed snacks)", optProcMed: "Moderate (2-3 times/week)", optProcLow: "Low (Mostly fresh cooked)",
+            lblFoodWaste: "Household Food Waste (Grams/Day):",
+            step4Title: "Step 4: Consumer Goods, Energy & Transport",
+            lblClothes: "Clothes Purchases (Items/Month):", lblScreenTime: "Screen/Digital Hours (Hours/Day):",
+            lblCarKm: "Private Car Travel (Km/Week):", lblPaper: "Paper Usage (Sheets/Day):",
+            certTitle: "WATER FOOTPRINT AUDIT REPORT",
+            certBody1: "This official audit report certifies that", certBody2: "from", certBody3: "has successfully completed the ISO 14046 compliant household water footprint analysis.",
+            lblBlueWater: "Blue Water (Surface/Ground)", lblGreenWater: "Green Water (Rainwater/Agri)", lblGreyWater: "Grey Water (Dilution/Pollution)",
+            lblTotalHousehold: "TOTAL DAILY HOUSEHOLD FOOTPRINT", lblPerPerson: "Per Person:",
+            txtCircularSavings: "Circular Economy Water Savings: Thanks to rainwater harvesting and greywater reuse, <strong><span id=\"savedLitres\">0</span> L</strong> of water was saved today!",
+            txtPieTitle: "ISO Water Type Distribution", txtBarTitle: "Consumption Category Breakdown",
+            txtBenchTitle: "Regional Benchmarking Analysis", txtRiskTitle: "Environmental Equivalency Impact",
+            txtPlanTitle: "Personalized Blue Action Commitment Plan",
+            lblIssueDate: "Issue Date:",
+            btnPngText: "Download Image (PNG)", btnPdfText: "Download Document (PDF)",
+            btnPrevText: "Previous", btnNextText: "Next", btnRunAuditText: "Run Audit"
+        },
+        es: {
+            headerTitle: "Auditoría Avanzada de Huella Hídrica",
+            node1: "Perfil", node2: "Doméstico", node3: "Dieta", node4: "Consumo", node5: "Informe",
+            step1Title: "Paso 1: Perfil del Participante",
+            lblStudentName: "Nombre del Estudiante e Inicial:",
+            lblSchoolName: "Nombre de la Escuela:",
+            lblFamilyMembers: "Tamaño del Hogar:",
+            lblCountry: "País:",
+            step2Title: "Paso 2: Uso Doméstico Directo de Agua y Recuperación Circular",
+            lblShower: "Tiempo de Ducha (Min/Día):",
+            lblTap: "Grifo Abierto (Min/Día):",
+            lblFlush: "Usos del Inodoro (Veces/Día):",
+            lblDishwasher: "Lavavajillas (Cargas/Semana):",
+            lblWashingMachine: "Lavadora (Cargas/Semana):",
+            lblLeakage: "¿Hay Grifos con Fugas?:",
+            optLeakNo: "No (Ninguna)", optLeakYes: "Sí (~30L/Día Desperdicio)",
+            lblRainHarvest: "¿Recoges agua de lluvia?:",
+            optRainNo: "No (No se utiliza)", optRainYes: "Sí (Recogida para jardín/limpieza)",
+            lblGreywater: "¿Sistema de reciclaje de aguas grises?:",
+            optGreyNo: "No (No se utiliza)", optGreyYes: "Sí (Agua del lavabo/ducha usada en inodoro)",
+            lblLowFlow: "¿Grifos de bajo consumo (reguladores)?:",
+            optFlowNo: "No (Estándar)", optFlowYes: "Sí (Con aireadores/cabezales de ahorro)",
+            step3Title: "Paso 3: Huella Hídrica de la Dieta",
+            lblDietType: "Patrón Dietético Principal:",
+            optMeat: "Basado en Carne (~4.800 L/día)", optBalanced: "Omnívoro Equilibrado (~3.200 L/día)",
+            optVeg: "Vegetariano (~2.100 L/día)", optVegan: "Vegano (~1.400 L/día)",
+            lblCoffeeTea: "Café y Té (Tazas/Día):", lblDairy: "Lácteos (Gramos/Día):",
+            lblProcessed: "Frecuencia de Alimentos Procesados:",
+            optProcHigh: "Alta (Diario snacks)", optProcMed: "Moderada (2-3 veces/semana)", optProcLow: "Baja (Mayoría casero)",
+            lblFoodWaste: "Desperdicio de Comida (Gramos/Día):",
+            step4Title: "Paso 4: Bienes de Consumo, Energía y Transporte",
+            lblClothes: "Ropa Comprada (Artículos/Mes):", lblScreenTime: "Horas de Pantalla/Digital (Horas/Día):",
+            lblCarKm: "Viaje en Coche Privado (Km/Semana):", lblPaper: "Uso de Papel (Hojas/Día):",
+            certTitle: "INFORME DE AUDITORÍA DE HUELLA HÍDRICA",
+            certBody1: "Este informe oficial certifica que", certBody2: "de", certBody3: "ha completado con éxito el análisis de huella hídrica doméstica conforme a la norma ISO 14046.",
+            lblBlueWater: "Agua Azul (Superficie/Subterránea)", lblGreenWater: "Agua Verde (Lluvia/Agrícola)", lblGreyWater: "Agua Gris (Dilución/Contaminación)",
+            lblTotalHousehold: "HUELLA HÍDRICA DIARIA TOTAL DEL HOGAR", lblPerPerson: "Por Persona:",
+            txtCircularSavings: "Ahorro de agua en economía circular: ¡Gracias a la recolección de agua de lluvia y la reutilización de aguas grises, hoy se han ahorrado <strong><span id=\"savedLitres\">0</span> L</strong> de agua!",
+            txtPieTitle: "Distribución del Tipo de Agua ISO", txtBarTitle: "Desglose por Categoría de Consumo",
+            txtBenchTitle: "Análisis Comparativo Regional", txtRiskTitle: "Impacto de Equivalencia Ambiental",
+            txtPlanTitle: "Plan Personalizado de Compromiso Azul",
+            lblIssueDate: "Fecha de Emisión:",
+            btnPngText: "Descargar Imagen (PNG)", btnPdfText: "Descargar Documento (PDF)",
+            btnPrevText: "Anterior", btnNextText: "Siguiente", btnRunAuditText: "Ejecutar Auditoría"
+        }
+    };
+
+    function setLanguage(lang) {
+        currentLang = lang;
+        document.querySelectorAll('.lang-btn').forEach(btn => btn.classList.remove('active'));
+        event.target.classList.add('active');
+
+        const t = i18n[lang];
+        document.getElementById('txtHeaderTitle').innerText = t.headerTitle;
+        document.getElementById('txtNode1').innerText = t.node1;
+        document.getElementById('txtNode2').innerText = t.node2;
+        document.getElementById('txtNode3').innerText = t.node3;
+        document.getElementById('txtNode4').innerText = t.node4;
+        document.getElementById('txtNode5').innerText = t.node5;
+
+        document.getElementById('txtStep1Title').innerText = t.step1Title;
+        document.getElementById('lblStudentName').innerText = t.lblStudentName;
+        document.getElementById('lblSchoolName').innerText = t.lblSchoolName;
+        document.getElementById('lblFamilyMembers').innerText = t.lblFamilyMembers;
+        document.getElementById('lblCountry').innerText = t.lblCountry;
+
+        document.getElementById('txtStep2Title').innerText = t.step2Title;
+        document.getElementById('lblShower').innerText = t.lblShower;
+        document.getElementById('lblTap').innerText = t.lblTap;
+        document.getElementById('lblFlush').innerText = t.lblFlush;
+        document.getElementById('lblDishwasher').innerText = t.lblDishwasher;
+        document.getElementById('lblWashingMachine').innerText = t.lblWashingMachine;
+        document.getElementById('lblLeakage').innerText = t.lblLeakage;
+        document.getElementById('optLeakNo').innerText = t.optLeakNo;
+        document.getElementById('optLeakYes').innerText = t.optLeakYes;
+
+        document.getElementById('lblRainHarvest').innerText = t.lblRainHarvest;
+        document.getElementById('optRainNo').innerText = t.optRainNo;
+        document.getElementById('optRainYes').innerText = t.optRainYes;
+        document.getElementById('lblGreywater').innerText = t.lblGreywater;
+        document.getElementById('optGreyNo').innerText = t.optGreyNo;
+        document.getElementById('optGreyYes').innerText = t.optGreyYes;
+        document.getElementById('lblLowFlow').innerText = t.lblLowFlow;
+        document.getElementById('optFlowNo').innerText = t.optFlowNo;
+        document.getElementById('optFlowYes').innerText = t.optFlowYes;
+
+        document.getElementById('txtStep3Title').innerText = t.step3Title;
+        document.getElementById('lblDietType').innerText = t.lblDietType;
+        document.getElementById('optMeat').innerText = t.optMeat;
+        document.getElementById('optBalanced').innerText = t.optBalanced;
+        document.getElementById('optVeg').innerText = t.optVeg;
+        document.getElementById('optVegan').innerText = t.optVegan;
+        document.getElementById('lblCoffeeTea').innerText = t.lblCoffeeTea;
+        document.getElementById('lblDairy').innerText = t.lblDairy;
+        document.getElementById('lblProcessed').innerText = t.lblProcessed;
+        document.getElementById('optProcHigh').innerText = t.optProcHigh;
+        document.getElementById('optProcMed').innerText = t.optProcMed;
+        document.getElementById('optProcLow').innerText = t.optProcLow;
+        document.getElementById('lblFoodWaste').innerText = t.lblFoodWaste;
+
+        document.getElementById('txtStep4Title').innerText = t.step4Title;
+        document.getElementById('lblClothes').innerText = t.lblClothes;
+        document.getElementById('lblScreenTime').innerText = t.lblScreenTime;
+        document.getElementById('lblCarKm').innerText = t.lblCarKm;
+        document.getElementById('lblPaper').innerText = t.lblPaper;
+
+        document.getElementById('txtCertTitle').innerText = t.certTitle;
+        document.getElementById('txtCertBody1').innerText = t.certBody1;
+        document.getElementById('txtCertBody2').innerText = t.certBody2;
+        document.getElementById('txtCertBody3').innerText = t.certBody3;
+        document.getElementById('lblBlueWater').innerText = t.lblBlueWater;
+        document.getElementById('lblGreenWater').innerText = t.lblGreenWater;
+        document.getElementById('lblGreyWater').innerText = t.lblGreyWater;
+        document.getElementById('lblTotalHousehold').innerText = t.lblTotalHousehold;
+        document.getElementById('lblPerPerson').innerText = t.lblPerPerson;
+        document.getElementById('txtPieTitle').innerText = t.txtPieTitle;
+        document.getElementById('txtBarTitle').innerText = t.txtBarTitle;
+        document.getElementById('txtBenchTitle').innerText = t.txtBenchTitle;
+        document.getElementById('txtRiskTitle').innerText = t.txtRiskTitle;
+        document.getElementById('txtPlanTitle').innerText = t.txtPlanTitle;
+        document.getElementById('lblIssueDate').innerText = t.lblIssueDate;
+        document.getElementById('btnPngText').innerText = t.btnPngText;
+        document.getElementById('btnPdfText').innerText = t.btnPdfText;
+        document.getElementById('btnPrevText').innerText = t.btnPrevText;
+
+        if(currentStep === 4) {
+            document.getElementById('btnNextText').innerText = t.btnRunAuditText;
+        } else {
+            document.getElementById('btnNextText').innerText = t.btnNextText;
+        }
+
+        if(currentStep === 5) calculateAdvancedAudit();
+    }
+
+    function navigateStep(direction) {
+        if(direction === 1 && currentStep === 1) {
+            const studentName = document.getElementById('studentName').value;
+            const schoolName = document.getElementById('schoolName').value;
+            if(!studentName || !schoolName) {
+                alert(currentLang === 'tr' ? "Lütfen Adınızı ve Okulunuzu giriniz!" : "Please fill in your Name and School Name!");
+                return;
+            }
+        }
+
+        document.getElementById(`step${currentStep}`).classList.remove('active-step');
+        document.getElementById(`node${currentStep}`).classList.remove('active');
+
+        currentStep += direction;
+
+        if(currentStep > totalSteps) currentStep = totalSteps;
+        if(currentStep < 1) currentStep = 1;
+
+        if(currentStep === 5) {
+            calculateAdvancedAudit();
+        }
+
+        document.getElementById(`step${currentStep}`).classList.add('active-step');
+        
+        for(let i = 1; i <= currentStep; i++) {
+            document.getElementById(`node${i}`).classList.add('active');
+        }
+
+        const progressPercent = (currentStep / totalSteps) * 100;
+        document.getElementById('progressBar').style.width = `${progressPercent}%`;
+
+        document.getElementById('btnPrev').style.display = currentStep === 1 ? 'none' : 'flex';
+        
+        const t = i18n[currentLang];
+        if(currentStep === 5) {
+            document.getElementById('btnNext').style.display = 'none';
+        } else {
+            document.getElementById('btnNext').style.display = 'flex';
+            document.getElementById('btnNextText').innerText = currentStep === 4 ? t.btnRunAuditText : t.btnNextText;
+        }
+    }
+
+    function calculateAdvancedAudit() {
+        const studentName = document.getElementById('studentName').value || "Student";
+        const schoolName = document.getElementById('schoolName').value || "School";
+        const members = parseInt(document.getElementById('familyMembers').value) || 1;
+        const country = document.getElementById('country').options[document.getElementById('country').selectedIndex].text;
+
+        // STEP 2: Domestic Inputs
+        let shower = parseInt(document.getElementById('shower').value) || 0;
+        let tap = parseInt(document.getElementById('tap').value) || 0;
+        let flush = parseInt(document.getElementById('flush').value) || 0;
+        const dishwasher = parseInt(document.getElementById('dishwasher').value) || 0;
+        const washingMachine = parseInt(document.getElementById('washingMachine').value) || 0;
+        const leakage = parseInt(document.getElementById('leakage').value) || 0;
+
+        const rainHarvest = document.getElementById('rainHarvest').value;
+        const greywater = document.getElementById('greywater').value;
+        const lowFlow = document.getElementById('lowFlowFaucets').value;
+
+        // Apply Circular tech reductions (Aerators & recycling reuse saving)
+        let totalSavedCirc = 0;
+        if (lowFlow === 'yes') {
+            const originalDirect = (shower * 10) + (tap * 6);
+            shower = shower * 0.7; // ~30% saving on shower
+            tap = tap * 0.65; // ~35% saving on tap
+            totalSavedCirc += Math.round(originalDirect - ((shower * 10) + (tap * 6)));
+        }
+        if (greywater === 'yes') {
+            // Sifon water typically accounted for ~30% of domestic use, recycled greywater mitigates Blue Water
+            const originalFlush = flush * 8;
+            flush = flush * 0.4; // Sifon Blue Water Footprint significantly reduced (~60% reclaimed)
+            totalSavedCirc += Math.round(originalFlush - (flush * 8));
+        }
+        if (rainHarvest === 'yes') {
+            // Outdoor irrigation/house cleaning met from rainwater, saving primary municipal tap blue water footprint
+            totalSavedCirc += 35; // Flat estimated mitigation per person daily
+        }
+
+        const directDailyPerPerson = (shower * 10) + (tap * 6) + (flush * 8) + ((dishwasher * 45) / 7 / members) + ((washingMachine * 60) / 7 / members) + leakage;
+        const totalDirectHousehold = Math.round(directDailyPerPerson * members);
+
+        // STEP 3: Diet
+        const diet = document.getElementById('dietType').value;
+        let dietBase = 3200;
+        if(diet === 'meat') dietBase = 4800;
+        if(diet === 'vegetarian') dietBase = 2100;
+        if(diet === 'vegan') dietBase = 1400;
+
+        const coffeeTea = parseInt(document.getElementById('coffeeTea').value) || 0;
+        const dairy = parseInt(document.getElementById('dairy').value) || 0;
+        const processed = document.getElementById('processedFood').value;
+        let processedExtra = 200;
+        if(processed === 'high') processedExtra = 600;
+        if(processed === 'low') processedExtra = 50;
+
+        const foodWaste = parseInt(document.getElementById('foodWaste').value) || 0;
+
+        const dietDailyPerPerson = dietBase + (coffeeTea * 140) + (dairy * 3.5) + processedExtra + (foodWaste * 4.5);
+        const totalDietHousehold = Math.round(dietDailyPerPerson * members);
+
+        // STEP 4: Consumers
+        const clothes = parseInt(document.getElementById('clothes').value) || 0;
+        const screenTime = parseInt(document.getElementById('screenTime').value) || 0;
+        const carKm = parseInt(document.getElementById('carKm').value) || 0;
+        const paper = parseInt(document.getElementById('paper').value) || 0;
+
+        const consumerDailyHousehold = Math.round(((clothes * 2700) / 30) + (screenTime * members * 25) + ((carKm * 18) / 7 * members) + (paper * members * 10));
+
+        // ISO Water Type Allocations
+        const blueWater = Math.max(10, Math.round(totalDirectHousehold + (totalDietHousehold * 0.20)));
+        const greenWater = Math.round(totalDietHousehold * 0.65);
+        const greyWater = Math.round(consumerDailyHousehold + (totalDietHousehold * 0.15));
+
+        const grandTotal = blueWater + greenWater + greyWater;
+        const perPersonTotal = Math.round(grandTotal / members);
+
+        const directPercentage = Math.round((totalDirectHousehold / grandTotal) * 100);
+        const virtualPercentage = 100 - directPercentage;
+
+        // Populate Audit Text Fields
+        document.getElementById('rptStudentName').innerText = studentName;
+        document.getElementById('rptSchoolName').innerText = schoolName;
+        document.getElementById('rptCountry').innerText = country;
+
+        document.getElementById('rptBlue').innerText = blueWater.toLocaleString() + ' L';
+        document.getElementById('rptGreen').innerText = greenWater.toLocaleString() + ' L';
+        document.getElementById('rptGrey').innerText = greyWater.toLocaleString() + ' L';
+
+        document.getElementById('rptTotal').innerText = grandTotal.toLocaleString() + ' Liters / Day';
+        document.getElementById('rptPerPerson').innerText = perPersonTotal.toLocaleString() + ' L/day';
+
+        document.getElementById('rptDate').innerText = new Date().toLocaleDateString('en-GB');
+        document.getElementById('rptUUID').innerText = 'BLS-' + Math.floor(100000 + Math.random() * 900000);
+
+        // Render savings if circular active
+        const savingsEl = document.getElementById('circularHighlight');
+        if (totalSavedCirc > 0) {
+            savingsEl.style.display = 'block';
+            document.getElementById('savedLitres').innerText = (totalSavedCirc * members).toLocaleString();
+        } else {
+            savingsEl.style.display = 'none';
+        }
+
+        // Render Dual Charts
+        renderPieChart(blueWater, greenWater, greyWater);
+        renderBarChart(totalDirectHousehold, totalDietHousehold, consumerDailyHousehold);
+
+        // AI Insights & Recommendations
+        generateDeepInsights(perPersonTotal, grandTotal, totalDirectHousehold, totalDietHousehold, consumerDailyHousehold, rainHarvest, greywater, lowFlow);
+    }
+
+    function renderPieChart(blue, green, grey) {
+        const ctx = document.getElementById('pieChart').getContext('2d');
+        if(pieChartInstance) pieChartInstance.destroy();
+        pieChartInstance = new Chart(ctx, {
+            type: 'doughnut',
+            data: {
+                labels: ['Blue Water', 'Green Water', 'Grey Water'],
+                datasets: [{
+                    data: [blue, green, grey],
+                    backgroundColor: ['#0077b6', '#2a9d8f', '#6c757d'],
+                    borderWidth: 2
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { legend: { position: 'bottom', labels: { boxWidth: 10, font: { size: 10 } } } }
+            }
+        });
+    }
+
+    function renderBarChart(direct, diet, consumer) {
+        const ctx = document.getElementById('barChart').getContext('2d');
+        if(barChartInstance) barChartInstance.destroy();
+        barChartInstance = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: ['Direct Domestic', 'Dietary Virtual', 'Consumer & Energy'],
+                datasets: [{
+                    label: 'Liters / Day',
+                    data: [direct, diet, consumer],
+                    backgroundColor: ['#00b4d8', '#2a9d8f', '#e76f51'],
+                    borderRadius: 8
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { legend: { display: false } },
+                scales: { y: { beginAtZero: true } }
+            }
+        });
+    }
+
+    function generateDeepInsights(perPerson, grandTotal, direct, diet, consumer, rainHarvest, greywater, lowFlow) {
+        const benchEl = document.getElementById('benchmarkText');
+        const riskEl = document.getElementById('riskText');
+        const listEl = document.getElementById('recommendationsList');
+        listEl.innerHTML = '';
+
+        const euAvg = 3800;
+        const diff = perPerson - euAvg;
+
+        if(currentLang === 'tr') {
+            benchEl.innerHTML = diff > 0 
+                ? `Kişi başı su iziniz (<strong>${perPerson.toLocaleString()} L/gün</strong>), Avrupa ortalamasından (~3.800 L) <strong>%${Math.round((diff/euAvg)*100)} DAHA YÜKSEK</strong>. Tasarruf potansiyeliniz yüksek.`
+                : `Tebrikler! Kişi başı su iziniz (<strong>${perPerson.toLocaleString()} L/gün</strong>), Avrupa ortalamasından <strong>%${Math.abs(Math.round((diff/euAvg)*100))} DAHA DÜŞÜK</strong>.`;
+            
+            const pools = ((grandTotal * 365) / 2500000).toFixed(2);
+            const trees = Math.round((grandTotal * 365) / 10000);
+            riskEl.innerHTML = `Yıllık evsel su iziniz <strong>${(grandTotal * 365).toLocaleString()} Litre</strong>. Bu miktar <strong>${trees} orman ağacının</strong> yıllık su emilimine veya <strong>${pools} olimpik yüzme havuzuna</strong> eşittir.`;
+
+            // Circular tech optimization
+            if (rainHarvest === 'no') {
+                listEl.innerHTML += "<li><strong>Yağmur Hasadı:</strong> Çatı sularını toplayıp filtreleyerek bahçenizi sulayabilir ve dış mekanda %100 Yeşil su kullanabilirsiniz.</li>";
+            }
+            if (greywater === 'no') {
+                listEl.innerHTML += "<li><strong>Gri Su Geri Kazanımı:</strong> Duş ve lavabo atık sularını sifon rezervuarlarında yeniden kullanmak, mavi su ayak izinizi hızla düşürür.</li>";
+            }
+            if (lowFlow === 'no') {
+                listEl.innerHTML += "<li><strong>Su Tasarruflu Armatürler:</strong> Musluklarınıza debi sınırlandırıcı perlatör takarak su tüketiminde anında %30 tasarruf sağlayabilirsiniz.</li>";
+            }
+
+            if(diet >= direct && diet >= consumer) {
+                listEl.innerHTML += "<li><strong>Beslenme Dönüşümü:</strong> Haftada 2 öğün eti bakliyatla değiştirmek kişi başı haftalık ~3.000L su tasarrufu sağlar.</li>";
+                listEl.innerHTML += "<li><strong>Gıda İsrafı Önleme:</strong> Günlük 150g gıda israfını önlemek günde 600L suyu kurtarır.</li>";
+            } else {
+                listEl.innerHTML += "<li><strong>Tekstil ve Dijital:</strong> 1 yeni kıyafet alımını ertelemek 2.700L gizli su tasarrufu sağlar.</li>";
+            }
+            listEl.innerHTML += "<li><strong>Topluluk Eylemi:</strong> Bu raporu TwinBoard panosunda paylaşarak diğer okullara ilham verin!</li>";
+        } else {
+            benchEl.innerHTML = diff > 0 
+                ? `Your per person footprint (<strong>${perPerson.toLocaleString()} L/day</strong>) is <strong>${Math.round((diff/euAvg)*100)}% HIGHER</strong> than the EU average.`
+                : `Great job! Your per person footprint (<strong>${perPerson.toLocaleString()} L/day</strong>) is <strong>${Math.abs(Math.round((diff/euAvg)*100))}% LOWER</strong> than the EU average.`;
+            
+            const pools = ((grandTotal * 365) / 2500000).toFixed(2);
+            const trees = Math.round((grandTotal * 365) / 10000);
+            riskEl.innerHTML = `Your annual footprint equals <strong>${(grandTotal * 365).toLocaleString()} Liters</strong> per year. That equals <strong>${trees} trees</strong> annual water absorption or <strong>${pools} Olympic pools</strong>!`;
+
+            if (rainHarvest === 'no') {
+                listEl.innerHTML += "<li><strong>Rainwater Harvesting:</strong> Set up catchments to capture roof rain for gardening to swap blue water for green water.</li>";
+            }
+            if (greywater === 'no') {
+                listEl.innerHTML += "<li><strong>Greywater Recycling:</strong> Direct shower/sink output to your toilets to reclaim up to 30% of direct water wastage.</li>";
+            }
+            if (lowFlow === 'no') {
+                listEl.innerHTML += "<li><strong>Flow Regulators:</strong> Upgrade to high-efficiency aerators on faucets to suppress flow by ~30% instantaneously.</li>";
+            }
+
+            listEl.innerHTML += "<li><strong>Dietary Action:</strong> Reduce food waste and incorporate plant-based meals to save up to 3,000L weekly.</li>";
+            listEl.innerHTML += "<li><strong>Community Action:</strong> Share this report on TwinBoard to inspire partner schools!</li>";
+        }
+    }
+
+    function getCleanStudentName() {
+        const rawName = document.getElementById('studentName').value || "Student";
+        return rawName.trim().replace(/[^a-zA-Z0-9-_\s]/g, "").replace(/\s+/g, "_");
+    }
+
+    function downloadPNG() {
+        const certElement = document.getElementById('certificate');
+        const fileName = `${getCleanStudentName()}_Water_Footprint_Audit_Report.png`;
+
+        html2canvas(certElement, { scale: 3 }).then(canvas => {
+            const link = document.createElement('a');
+            link.download = fileName;
+            link.href = canvas.toDataURL('image/png');
+            link.click();
+        });
+    }
+
+    function downloadPDF() {
+        const { jsPDF } = window.jspdf;
+        const certElement = document.getElementById('certificate');
+        const fileName = `${getCleanStudentName()}_Water_Footprint_Audit_Report.pdf`;
+
+        html2canvas(certElement, { scale: 3 }).then(canvas => {
+            const imgData = canvas.toDataURL('image/png');
+            const pdf = new jsPDF('p', 'mm', 'a4');
+            const imgProps = pdf.getImageProperties(imgData);
+            const pdfWidth = pdf.internal.pageSize.getWidth() - 16;
+            const pdfHeight = (imgProps.height * pdfWidth) / imgProps.width;
+
+            pdf.addImage(imgData, 'PNG', 8, 10, pdfWidth, pdfHeight);
+            pdf.save(fileName);
+        });
+    }
+</script>
+
+</body>
+</html>
